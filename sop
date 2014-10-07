@@ -1,0 +1,86 @@
+#!/bin/bash
+
+# prodg.2007
+
+
+ANTS_PORT="16900"
+SOP_PORT="8908"
+OCT_DIR="/mnt/extra/programas/octoshape"
+
+MPLAYER="/usr/bin/mplayer -autosync 30"
+EXT_MPLAYER="$MPLAYER -monitoraspect 16:9 -fs"
+XTERM="/usr/bin/xterm"
+SPSC="/usr/bin/sp-sc"
+
+
+function usage() {
+	echo "usage:"
+	echo "	TVants: sop ants channel (tv)"
+	echo "	Octoshape: sop oct string (tv)"
+	echo "	Sopcast: sop sop url (tv)"
+}
+
+	
+if [ ${#*} -lt 2 ] || [ ${#*} -gt 3 ]; then
+	usage
+	exit
+fi
+
+case "$1" in 
+	"ants" )
+		if [ "$3" == "tv" ]; then
+			DISPLAY=":0.1" exec $EXT_MPLAYER mms://localhost:$ANTS_PORT/$2
+		else
+			exec $MPLAYER mms://localhost:$ANTS_PORT/$2
+		fi
+	;;
+	
+	"oct" )
+		if [ "$3" == "tv" ]; then
+			cp $OCT_DIR/setup.xml.tv $OCT_DIR/setup.xml
+			DISPLAY=":0.1" exec $OCT_DIR/OctoshapeClient -url:$2
+		else
+			cp $OCT_DIR/setup.xml.lap $OCT_DIR/setup.xml
+			exec $OCT_DIR/OctoshapeClient -url:$2
+		fi
+	;;
+	
+	"sop" )
+		if [ "${2:0:6}" == "sop://" ]; then
+			TIME=30
+			INTERVAL=5
+		
+			$XTERM -T "sopcast terminal" -e "$SPSC $2 3908 $SOP_PORT" &
+			echo -n "Buffering: "
+		
+			while [ "$TIME" -gt 0 ]; do
+				if [ ! "$(ps -ef | grep $! | grep -v grep)" ]; then
+					echo "Error connecting."
+					exit
+				fi
+				echo -n "$TIME "
+				sleep $INTERVAL
+				let TIME-=$INTERVAL
+			done	
+			
+			echo "ok!"
+		fi
+
+		if [ "$3" == "tv" ]; then
+			DISPLAY=":0.1" exec $EXT_MPLAYER http://localhost:$SOP_PORT/tv.asf
+		else
+			exec $MPLAYER http://localhost:$SOP_PORT/tv.asf
+		fi	
+	;;
+	
+	* )
+		usage
+		exit
+	;;
+esac
+
+exit 0
+
+
+
+
