@@ -1,28 +1,18 @@
-# /etc/skel/.bashrc
-#
-# This file is sourced by all *interactive* bash shells on startup,
-# including some apparently interactive shells such as scp and rcp
-# that can't tolerate any output.  So make sure this doesn't display
-# anything or bad things will happen !
+#!/bin/bash
 
+# aliases
+alias less="less -R"
+alias ll="ls -lhpG"
+alias la="ll -A"
+alias ack-src="ack --ignore-dir=target --ignore-dir=.idea --ignore-file=ext:iml --ignore-file=ext:log"
+alias ack-src-no-tests="ack-src --ignore-dir=test"
+alias ack-jvm="ack-src --java --scala"
+alias ack-jvm-no-tests="ack-jvm --ignore-dir=test"
+alias ack-pom="ack-src --pom"
+alias deps="mvn dependency:tree | less"
+alias idea-clean='find $HOME/dev/aurora/ -name ".idea" | egrep -v "Aurora|Tests|Thrift|pipeline-" | xargs rm -rf'
 
-# Test for an interactive shell.  There is no need to set anything
-# past this point for scp and rcp, and it's important to refrain from
-# outputting anything in those cases.
-if [[ $- != *i* ]] ; then
-	# Shell is non-interactive.  Be done now!
-	return
-fi
-
-
-# Put your fun stuff here.
-
-alias grep='grep --color=auto'
-alias ls='ls --color=auto'
-alias ll='ls -lh'
-alias la='ll -A'
-
-export HISTCONTROL="$HISTCONTROL ignoredups"
+# PS1
 
 BLACK="\[\e[30m\]"
 BLACK_HI="\[\e[90m\]"
@@ -41,7 +31,9 @@ BRACKETS=${BLACK_HI}
 
 gitprompt="$HOME/code/bash-git-prompt/gitprompt.sh"
 if [[ -f $gitprompt ]] ; then
-    export PS1="$BRACKETS\t $COLOR\u$BRACKETS@$WHITE\h$BRACKETS:$WHITE_HI\w\$($gitprompt) $COLOR\$ $RESET"
+    export PS1="$BRACKETS\t $COLOR\u$BRACKETS:$WHITE_HI\w\$($gitprompt) $COLOR\$ $RESET"
 else
-    export PS1="$BRACKETS\t $COLOR\u$BRACKETS@$WHITE\h$BRACKETS:$WHITE_HI\w $COLOR\$ $RESET"
+    export PS1="$BRACKETS\t $COLOR\u$BRACKETS:$WHITE_HI\w $COLOR\$ $RESET"
 fi
+
+export PROMPT_COMMAND='echo -ne "\033]0;${PWD/#$HOME/~}\007"'
